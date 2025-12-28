@@ -1,0 +1,30 @@
+{
+  "name": "resource-finalizer",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && node ./node_modules/.bin/tsc",
+    "clean": "node -e \"['./dist'].forEach(item => require('fs').rmSync(item, {recursive:true,force:true}));\"",
+    "prepack": "npm run build"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "disposablestack": "^1.1.7"
+  }
+}
