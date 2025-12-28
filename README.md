@@ -54,34 +54,34 @@ npm install resource-finalizer
 import { Symbols, Destructor } from 'resource-finalizer';
 
 class A extends Destructor {
-  constructor() {
+  public constructor() {
     super();
     console.log('[A] constructor');
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     console.log('[A] destructor');
   }
 }
 
 class B extends A {
-  constructor() {
+  public constructor() {
     super();
     console.log('[B] constructor');
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     console.log('[B] destructor');
   }
 }
 
 class C extends B {
-  constructor() {
+  public constructor() {
     super();
     console.log('[C] constructor');
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     console.log('[C] destructor');
   }
 }
@@ -107,34 +107,34 @@ Expected order:
 import { Symbols, AsyncDestructor } from 'resource-finalizer';
 
 class A extends AsyncDestructor {
-  constructor() {
+  public constructor() {
     super();
     console.log('[Async][A] constructor');
   }
 
-  async [Symbols.asyncDestructor](): Promise<void> {
+  public async [Symbols.asyncDestructor](): Promise<void> {
     console.log('[Async][A] destructor');
   }
 }
 
 class B extends A {
-  constructor() {
+  public constructor() {
     super();
     console.log('[Async][B] constructor');
   }
 
-  async [Symbols.asyncDestructor](): Promise<void> {
+  public async [Symbols.asyncDestructor](): Promise<void> {
     console.log('[Async][B] destructor');
   }
 }
 
 class C extends B {
-  constructor() {
+  public constructor() {
     super();
     console.log('[Async][C] constructor');
   }
 
-  async [Symbols.asyncDestructor](): Promise<void> {
+  public async [Symbols.asyncDestructor](): Promise<void> {
     console.log('[Async][C] destructor');
   }
 }
@@ -194,23 +194,23 @@ class A extends SomeBaseClass implements Destructible {
 }
 
 class B extends A {
-  constructor() {
+  public constructor() {
     super();
     console.log('[B] constructor');
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     console.log('[B] destructor');
   }
 }
 
 class C extends B {
-  constructor() {
+  public constructor() {
     super();
     console.log('[C] constructor');
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     console.log('[C] destructor');
   }
 }
@@ -236,7 +236,7 @@ import { Symbols, Destructor } from 'resource-finalizer';
 class FileHandle extends Destructor {
   private fd: number;
 
-  constructor(fd: number) {
+  public constructor(fd: number) {
     super();
     this.fd = fd;
 
@@ -246,7 +246,7 @@ class FileHandle extends Destructor {
     });
   }
 
-  [Symbols.destructor](): void {
+  public [Symbols.destructor](): void {
     // Additional destructor logic (logging, metrics, invariants, etc.)
   }
 }
