@@ -20,6 +20,11 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "dependencies": {
     "disposablestack": "^1.1.7"
   },

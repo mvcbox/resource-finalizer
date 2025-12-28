@@ -1,5 +1,7 @@
-import type { Destructor } from './Destructor';
+import { Symbols } from './Symbols';
 
 export interface Destructible extends Disposable {
-  [Destructor.disposableStack]: DisposableStack;
+  [Symbols.disposableStack]: DisposableStack;
+  [Symbols.callDestructorsChain](): void;
+  [Symbols.destructor](): void;
 }

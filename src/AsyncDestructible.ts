@@ -1,5 +1,7 @@
-import type { Destructor } from './Destructor';
+import { Symbols } from './Symbols';
 
 export interface AsyncDestructible extends AsyncDisposable {
-  [Destructor.asyncDisposableStack]: AsyncDisposableStack;
+  [Symbols.asyncDisposableStack]: AsyncDisposableStack;
+  [Symbols.asyncCallDestructorsChain](): Promise<void>;
+  [Symbols.asyncDestructor](): Promise<void>;
 }
