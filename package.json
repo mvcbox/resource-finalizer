@@ -1,6 +1,7 @@
 {
   "name": "resource-finalizer",
   "version": "1.0.0",
+  "description": "",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,9 +18,31 @@
     "clean": "node -e \"['./dist'].forEach(item => require('fs').rmSync(item, {recursive:true,force:true}));\"",
     "prepack": "npm run build"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=18.0.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": ">=8.6.0",
+      "onFail": "error"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mvcbox/resource-finalizer.git"
+  },
+  "author": "mvcbox.org@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mvcbox/resource-finalizer/issues"
+  },
+  "homepage": "https://github.com/mvcbox/resource-finalizer#readme",
   "files": [
     "dist",
     "LICENSE",
