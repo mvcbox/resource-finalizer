@@ -4,7 +4,7 @@
     "lib": ["ES2022", "ESNext.Disposable"],
     "rootDir": "src",
     "outDir": "dist",
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,
