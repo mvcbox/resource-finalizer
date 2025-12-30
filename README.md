@@ -9,6 +9,12 @@ The package provides two base classes:
 - `Destructor` — synchronous cleanup
 - `AsyncDestructor` — asynchronous cleanup
 
+And two ready-to-use scope guards:
+
+- `ScopeGuard` — run a callback on scope exit (sync)
+- `AsyncScopeGuard` — run an async callback on scope exit (async)
+
+
 When an instance is disposed, **all destructors declared in the class inheritance chain** are invoked automatically (from the most-derived class to the base class).
 
 ---
@@ -18,6 +24,7 @@ When an instance is disposed, **all destructors declared in the class inheritanc
 - ✅ Works with `using` / `await using` (and manual `Symbol.dispose` / `Symbol.asyncDispose` calls)
 - ✅ Automatic destructor chaining across inheritance (`C -> B -> A`)
 - ✅ Built-in `DisposableStack` / `AsyncDisposableStack` (via the `disposablestack` polyfill)
+- ✅ Scope guards for ad-hoc cleanup (`ScopeGuard` / `AsyncScopeGuard`)
 - ✅ Small API surface, TypeScript-first typings
 
 ---
@@ -150,6 +157,93 @@ class C extends B {
 ```
 
 ---
+
+
+## Scope guards
+
+If you only need “run this cleanup when the scope ends”, you don’t have to define a new class.
+Use `ScopeGuard` / `AsyncScopeGuard` — small wrappers around `Destructor` / `AsyncDestructor` that execute a user-provided finalizer when disposed.
+
+### Sync (`ScopeGuard`)
+
+```ts
+import { ScopeGuard } from 'resource-finalizer';
+
+{
+  using _ = new ScopeGuard(() => {
+    console.log('cleanup runs on scope exit');
+  });
+
+  console.log('work');
+}
+
+console.log('after scope');
+```
+
+### Async (`AsyncScopeGuard`)
+
+```ts
+import { AsyncScopeGuard } from 'resource-finalizer';
+import { promises as fs } from 'node:fs';
+
+async function demo() {
+  const path = './tmp.txt';
+  await fs.writeFile(path, 'hello');
+
+  await using _ = new AsyncScopeGuard(async () => {
+    await fs.rm(path, { force: true });
+  });
+
+  // use the file...
+}
+```
+
+### Without `using` / `await using`
+
+```ts
+import { ScopeGuard, AsyncScopeGuard } from 'resource-finalizer';
+
+const g = new ScopeGuard(() => console.log('cleanup'));
+try {
+  // work...
+} finally {
+  g[Symbol.dispose]();
+}
+
+async function demoAsync() {
+  const g = new AsyncScopeGuard(async () => console.log('async cleanup'));
+  try {
+    // work...
+  } finally {
+    await g[Symbol.asyncDispose]();
+  }
+}
+```
+
+### Combine with `DisposableStack`
+
+Because scope guards implement `Disposable` / `AsyncDisposable`, you can register them in a stack:
+
+```ts
+import { Symbols, Destructor, ScopeGuard } from 'resource-finalizer';
+
+class Service extends Destructor {
+  public constructor() {
+    super();
+
+    this[Symbols.disposableStack].use(
+      new ScopeGuard(() => console.log('Service stopped'))
+    );
+  }
+
+  public [Symbols.destructor](): void {
+    // other cleanup...
+  }
+}
+```
+
+---
+
 
 ## Without inheritance from Destructor / AsyncDestructor
 
@@ -292,6 +386,19 @@ A holder of unique symbols used as keys:
 - Implements `AsyncDisposable` (`[Symbol.asyncDispose]()`)
 - Provides an instance `AsyncDisposableStack` at `this[Symbols.asyncDisposableStack]`
 - Requires you to implement `public abstract [Symbols.asyncDestructor](): Promise<void>`
+
+
+### `class ScopeGuard`
+
+- Extends `Destructor`
+- Constructor: `new ScopeGuard(() => void)`
+- Executes the finalizer on `[Symbol.dispose]()` / `using` scope exit
+
+### `class AsyncScopeGuard`
+
+- Extends `AsyncDestructor`
+- Constructor: `new AsyncScopeGuard(() => Promise<void>)`
+- Executes the finalizer on `[Symbol.asyncDispose]()` / `await using` scope exit
 
 ### Types
 
