@@ -23,7 +23,7 @@ When an instance is disposed, **all destructors declared in the class inheritanc
 
 - ✅ Works with `using` / `await using` (and manual `Symbol.dispose` / `Symbol.asyncDispose` calls)
 - ✅ Automatic destructor chaining across inheritance (`C -> B -> A`)
-- ✅ Built-in `DisposableStack` / `AsyncDisposableStack` (via the `disposablestack` polyfill)
+- ✅ Existing `DisposableStack` / `AsyncDisposableStack` implementations, with bundled fallbacks when absent
 - ✅ Scope guards for ad-hoc cleanup (`ScopeGuard` / `AsyncScopeGuard`)
 - ✅ Small API surface, TypeScript-first typings
 
@@ -39,19 +39,24 @@ npm install resource-finalizer
 
 ## Requirements
 
-- **TypeScript:** enable the disposable APIs in your `tsconfig.json`:
+- **TypeScript 5.2 or later:** enable the disposable APIs in your `tsconfig.json`. Use an appropriate output target for your runtime; `ES6` supports the package's Node.js 6 minimum:
 
 ```jsonc
 {
   "compilerOptions": {
+    "target": "ES6",
     "lib": ["ES2022", "ESNext.Disposable"]
   }
 }
 ```
 
-- **Runtime:** this library imports `disposablestack/auto` internally to ensure `DisposableStack` / `AsyncDisposableStack` exist on `globalThis`.
+- **Runtime:** Node.js 6 or later. The package installs its own fallbacks for missing `Symbol.dispose`, `Symbol.asyncDispose`, `SuppressedError`, `DisposableStack`, and `AsyncDisposableStack`, and initializes `globalThis` if needed. No runtime dependencies are required.
 
-> `using` / `await using` are part of the Explicit Resource Management proposal and require TypeScript (or a runtime) that understands this syntax.
+Existing non-`undefined` global values are preserved without validation, including native implementations and third-party polyfills. The exported `DisposableStack` and `AsyncDisposableStack` values reference the globals present when the package is first imported. Pre-installed polyfills are neither replaced nor repaired, and later changes to those globals do not update the exports.
+
+Fallback symbols created in separate realms have different identities. Resources shared across realms (for example, iframes) must expose the receiving realm's disposal symbols.
+
+> Runtime API polyfills do not transform `using` / `await using` syntax. Compile these declarations with TypeScript 5.2+ when your runtime does not support them. See the [TypeScript 5.2 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management).
 
 ---
 
@@ -181,6 +186,8 @@ console.log('after scope');
 ```
 
 ### Async (`AsyncScopeGuard`)
+
+This file-system example requires Node.js 14.18 or later for `node:fs` and `fs.promises.rm`.
 
 ```ts
 import { AsyncScopeGuard } from 'resource-finalizer';
@@ -360,6 +367,16 @@ That means:
 - ❌ Don’t assign destructors as instance fields (e.g. `this[Symbols.destructor] = () => {}`), because they won’t be found by the chain walker.
 - ❌ Don’t call `super[Symbols.destructor]()` manually — the base destructors are called automatically and you’d double-run them.
 
+### Cleanup errors
+
+Cleanup continues after a destructor throws or rejects: every discoverable destructor is attempted in `C -> B -> A` order. Stack callbacks likewise continue in reverse registration order. Errors are thrown or rejected only after cleanup finishes.
+
+A cyclic prototype chain reported by a `Proxy` ends the walk with a `TypeError`; each prototype is visited at most once.
+
+A single failure is rethrown unchanged, including a non-Error value. Multiple failures form a `SuppressedError` chain: each later failure is stored in `.error`, with the preceding failure in `.suppressed`. For `C -> B -> A` where all three fail, the final error contains `A` in `.error`, `B` in `.suppressed.error`, and the original `C` failure in `.suppressed.suppressed`. This follows [ECMAScript resource disposal](https://tc39.es/ecma262/multipage/abstract-operations.html#sec-disposeresources).
+
+The stack is marked disposed before cleanup starts. Repeated disposal does not retry callbacks; a concurrent second `disposeAsync()` returns its own resolved promise without waiting for the first call. A failure in a `using` body can be wrapped together with cleanup failures by the compiler or runtime.
+
 ---
 
 ## API
@@ -410,12 +427,38 @@ A holder of unique symbols used as keys:
 - `DisposableStack`
 - `AsyncDisposableStack`
 
+Both names export a constructor and an instance type, including when imported under an alias or through a namespace:
+
+```ts
+import {
+  DisposableStack as SyncStack,
+  AsyncDisposableStack as AsyncStack
+} from 'resource-finalizer';
+import type * as ResourceFinalizer from 'resource-finalizer';
+
+const sync: SyncStack = new SyncStack();
+const async: AsyncStack = new AsyncStack();
+const syncInstance: ResourceFinalizer.DisposableStack = sync;
+const asyncInstance: ResourceFinalizer.AsyncDisposableStack = async;
+```
+
 ### Utils
 
 - `createDisposableStack(): DisposableStack`
 - `createAsyncDisposableStack(): AsyncDisposableStack`
 - `callDestructorsChain(obj: object): void`
 - `asyncCallDestructorsChain(obj: object): Promise<void>`
+
+## Development
+
+Development requires Node.js 18 or later and npm 8.6 or later, separately from the published package's runtime minimum.
+
+```bash
+npm run typecheck
+npm test
+```
+
+The tests compile a fresh package and TypeScript consumers into `_local_data/`, then exercise native stacks when available and isolated fallbacks, including `using` / `await using`. These checks preserve the root `dist` directory. `npm run build` replaces `dist` for packaging.
 
 ## License
 

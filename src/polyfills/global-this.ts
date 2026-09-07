@@ -1,7 +1,9 @@
-(() => {
-  if (typeof (globalThis as any) !== "undefined") return;
+(function() {
+  if (typeof globalThis !== 'undefined') {
+    return;
+  }
 
-  const getGlobal = (): any => {
+  function getGlobal(): typeof globalThis {
     if (Function('typeof global !== "undefined"')()) {
       return Function('return global')();
     }
@@ -15,16 +17,16 @@
     }
 
     return Function('return this')();
-  };
+  }
 
-  const g = getGlobal();
+  const g: { globalThis?: unknown } = getGlobal();
 
-  if (typeof g.globalThis === "undefined") {
+  if (typeof g.globalThis === 'undefined') {
     try {
-      Object.defineProperty(g, "globalThis", {
+      Object.defineProperty(g, 'globalThis', {
         value: g,
         configurable: true,
-        writable: true,
+        writable: true
       });
     } catch {
       g.globalThis = g;

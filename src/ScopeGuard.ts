@@ -11,7 +11,7 @@ export class ScopeGuard extends Destructor {
     this.finalizer = finalizer;
   }
 
-  public [Symbols.destructor]() {
+  public [Symbols.destructor](): void {
     this.finalizer();
   }
 }
