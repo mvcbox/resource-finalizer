@@ -11,7 +11,7 @@ export class AsyncScopeGuard extends AsyncDestructor {
     this.finalizer = finalizer;
   }
 
-  public async [Symbols.asyncDestructor]() {
+  public async [Symbols.asyncDestructor](): Promise<void> {
     await this.finalizer();
   }
 }

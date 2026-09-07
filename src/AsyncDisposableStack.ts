@@ -1,5 +1,4 @@
 import './polyfills';
 
-require('disposablestack/auto');
-
-export const AsyncDisposableStack = (globalThis as any).AsyncDisposableStack as typeof globalThis.AsyncDisposableStack;
+export type AsyncDisposableStack = globalThis.AsyncDisposableStack;
+export const AsyncDisposableStack = globalThis.AsyncDisposableStack;

@@ -1,6 +1,6 @@
 {
   "name": "resource-finalizer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "type": "commonjs",
   "main": "./dist/index.js",
@@ -14,7 +14,9 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && node ./node_modules/.bin/tsc",
+    "build": "npm run clean && node ./node_modules/typescript/bin/tsc",
+    "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
+    "test": "node test/run-tests.cjs",
     "clean": "node -e \"['./dist'].forEach(item => require('fs').rmSync(item, {recursive:true,force:true}));\"",
     "prepack": "npm run build"
   },
@@ -48,9 +50,6 @@
     "LICENSE",
     "README.md"
   ],
-  "dependencies": {
-    "disposablestack": "^1.1.7"
-  },
   "devDependencies": {
     "@types/node": "^18.19.130",
     "typescript": "^5.9.3"
